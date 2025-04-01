@@ -23,7 +23,7 @@ class Task
     if ($filter === 'completed') {
         $query .= " AND tasks.status = 'Completed'";
     } elseif ($filter === 'incomplete') {
-        $query .= " AND tasks.status = 'Incomplete'";
+        $query .= " AND tasks.status = 'Pending'";
     }
 
     if (isset($category_id) ) {

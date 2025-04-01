@@ -21,7 +21,7 @@ class TaskController
     }
 
     $user_id = $_SESSION['user_id'];
-    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : 'incomplete';
     $search = isset($_GET['search']) ? $_GET['search'] : '';
     $sort = isset($_GET['sort']) && $_GET['sort'] === 'true';
 
