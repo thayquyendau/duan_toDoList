@@ -17,7 +17,7 @@ class AuthController {
             // var_dump($user);
 
             if ($user) {
-                session_start();
+                
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['username'] = $user['username'];
                 header('Location: /todolist/public/');
@@ -32,7 +32,7 @@ class AuthController {
     }
 
     public function logout() {
-        session_start();
+        
         session_destroy();
         header('Location: /todolist/public/?action=login');
         exit;

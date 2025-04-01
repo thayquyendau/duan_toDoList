@@ -1,72 +1,85 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 
-class Task {
+class Task
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $database = new Database();
         $this->db = $database->connect();
     }
 
-    public function read($user_id, $filter = 'all', $search = '', $sort = false) {
-        $query = "SELECT t.*, c.name as category_name 
-                 FROM tasks t 
-                 LEFT JOIN categories c ON t.category_id = c.category_id 
-                 WHERE t.user_id = ?";
-        $conditions = [];
-        $params = [$user_id];
+    public function read($user_id, $filter = 'all', $search = '', $sort = false, $category_id = null)
+{
+    $query = "SELECT tasks.*, categories.name AS category_name 
+              FROM tasks 
+              LEFT JOIN categories ON tasks.category_id = categories.id 
+              WHERE tasks.user_id = :user_id";
+    
+    $params = [':user_id' => $user_id];
 
-        if ($filter === 'completed') {
-            $conditions[] = "t.status = 'Completed'";
-        } elseif ($filter === 'incomplete') {
-            $conditions[] = "t.status = 'Pending'";
-        }
-
-        if (!empty($search)) {
-            $conditions[] = "t.title LIKE ?";
-            $params[] = "%$search%";
-        }
-
-        if (!empty($conditions)) {
-            $query .= " AND " . implode(" AND ", $conditions);
-        }
-
-        if ($sort) {
-            $query .= " ORDER BY t.status ASC";
-        }
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($filter === 'completed') {
+        $query .= " AND tasks.status = 'Completed'";
+    } elseif ($filter === 'incomplete') {
+        $query .= " AND tasks.status = 'Incomplete'";
     }
 
-    public function create($title, $description, $user_id, $category_id) {
+    if (isset($category_id) ) {
+        $query .= " AND tasks.category_id = :category_id";
+        $params[':category_id'] = $category_id;
+    }
+
+    if (!empty($search)) {
+        $query .= " AND (tasks.title LIKE :search OR tasks.description LIKE :search)";
+        $params[':search'] = "%$search%";
+    }
+
+    if ($sort) {
+        $query .= " ORDER BY tasks.status ASC";
+    }
+
+    $stmt = $this->db->prepare($query);
+    $stmt->execute($params);
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // var_dump($result); // Kiểm tra dữ liệu trả về
+    // die();
+    return $result;
+}
+
+    public function create($title, $description, $user_id, $category_id)
+    {
         $stmt = $this->db->prepare("INSERT INTO tasks (title, description, user_id, category_id) VALUES (?, ?, ?, ?)");
         return $stmt->execute([$title, $description, $user_id, $category_id]);
     }
 
-    public function update($task_id, $title, $description, $category_id) {
+    public function update($task_id, $title, $description, $category_id)
+    {
         $stmt = $this->db->prepare("UPDATE tasks SET title = ?, description = ?, category_id = ? WHERE task_id = ?");
         return $stmt->execute([$title, $description, $category_id, $task_id]);
     }
 
-    public function toggle($task_id, $status) {
+    public function toggle($task_id, $status)
+    {
         $stmt = $this->db->prepare("UPDATE tasks SET status = ? WHERE task_id = ?");
         return $stmt->execute([$status, $task_id]);
     }
 
-    public function delete($task_id) {
+    public function delete($task_id)
+    {
         $stmt = $this->db->prepare("DELETE FROM tasks WHERE task_id = ?");
         return $stmt->execute([$task_id]);
     }
 
-    public function clearCompleted($user_id) {
+    public function clearCompleted($user_id)
+    {
         $stmt = $this->db->prepare("DELETE FROM tasks WHERE status = 'Completed' AND user_id = ?");
         return $stmt->execute([$user_id]);
     }
 
-    public function getStats($user_id) {
+    public function getStats($user_id)
+    {
         $totalStmt = $this->db->prepare("SELECT COUNT(*) FROM tasks WHERE user_id = ?");
         $totalStmt->execute([$user_id]);
         $total = $totalStmt->fetchColumn();
@@ -83,4 +96,3 @@ class Task {
         ];
     }
 }
-?>

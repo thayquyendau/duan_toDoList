@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div class="todo-container">
         <div class="todo-header">
@@ -46,28 +48,56 @@
         </div>
 
         <div class="stats" id="stats">
-            Total: <?php echo $stats['total']; ?> | Completed: <?php echo $stats['completed']; ?> | Incomplete: <?php echo $stats['incomplete']; ?>
+            Total: <?php echo $stats['total']; ?>
+            | Completed: <?php echo $stats['completed']; ?>
+            | Incomplete: <?php echo $stats['incomplete']; ?>
         </div>
 
-        <div class="todolist" id="taskList">
-            <?php foreach ($tasks as $task): ?>
-                <div class="task-item <?php echo $task['status'] === 'Completed' ? 'completed' : ''; ?>" data-id="<?php echo $task['task_id']; ?>">
-                    <input type="checkbox" class="form-check-input me-2" 
-                        <?php echo $task['status'] === 'Completed' ? 'checked' : ''; ?> 
-                        onchange="toggleTask(<?php echo $task['task_id']; ?>, this.checked)">
-                    <span class="flex-grow-1">
-                        <strong><?php echo htmlspecialchars($task['title']); ?></strong>
-                        <small class="d-block text-muted"><?php echo htmlspecialchars($task['description']); ?></small>
-                        <small class="d-block text-muted">Category: <?php echo $task['category_name'] ?: 'None'; ?></small>
-                    </span>
-                    <button class="btn btn-warning btn-sm btn-action me-2" 
-                        onclick="editTask(<?php echo $task['task_id']; ?>, '<?php echo addslashes($task['title']); ?>', '<?php echo addslashes($task['description']); ?>', '<?php echo $task['category_id'] ?: ''; ?>')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm btn-action" 
-                        onclick="deleteTask(<?php echo $task['task_id']; ?>)">
-                        <i class="fas fa-trash"></i>
-                    </button>
+        <!-- Danh sách task nhóm theo danh mục -->
+        <div class="accordion" id="taskAccordion">
+            <?php foreach ($tasksByCategory as $category_id => $categoryData): ?>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-<?php echo $category_id; ?>">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapse-<?php echo $category_id; ?>"
+                            aria-expanded="false"
+                            aria-controls="collapse-<?php echo $category_id; ?>">
+                            <?php echo htmlspecialchars($categoryData['name']); ?>
+                            (<?php echo count($categoryData['tasks']); ?> tasks)
+                        </button>
+                    </h2>
+                    <div id="collapse-<?php echo $category_id; ?>"
+                        class="accordion-collapse collapse"
+                        aria-labelledby="heading-<?php echo $category_id; ?>"
+                        data-bs-parent="#taskAccordion">
+                        <div class="accordion-body">
+                            <?php if (empty($categoryData['tasks'])): ?>
+                                <p class="text-muted">No tasks in this category.</p>
+                            <?php else: ?>
+                                <?php foreach ($categoryData['tasks'] as $task): ?>
+                                    <div class="task-item <?php echo $task['status'] === 'Completed' ? 'completed' : ''; ?>"
+                                        data-id="<?php echo $task['task_id']; ?>">
+                                        <input type="checkbox" class="form-check-input me-2"
+                                            <?php echo $task['status'] === 'Completed' ? 'checked' : ''; ?>
+                                            onchange="toggleTask(<?php echo $task['task_id']; ?>, this.checked)">
+                                        <span class="flex-grow-1">
+                                            <strong><?php echo htmlspecialchars($task['title']); ?></strong>
+                                            <small class="d-block text-muted"><?php echo htmlspecialchars($task['description']); ?></small>
+                                            <small class="d-block text-muted">Category: <?php echo $task['category_name'] ?: 'None'; ?></small>
+                                        </span>
+                                        <button class="btn btn-warning btn-sm btn-action me-2"
+                                            onclick="editTask(<?php echo $task['task_id']; ?>, '<?php echo addslashes($task['title']); ?>', '<?php echo addslashes($task['description']); ?>', '<?php echo $task['category_id'] ?: ''; ?>')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-action"
+                                            onclick="deleteTask(<?php echo $task['task_id']; ?>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -84,7 +114,7 @@
                     <select class="form-select" id="taskCategory">
                         <option value="">No Category</option>
                         <?php foreach ($categories as $category): ?>
-                            <option value="<?php echo $category['category_id']; ?>">
+                            <option value="<?php echo $category['id']; ?>">
                                 <?php echo htmlspecialchars($category['name']); ?>
                             </option>
                         <?php endforeach; ?>
@@ -103,4 +133,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
     <script src="js/script.js"></script>
 </body>
+
 </html>
