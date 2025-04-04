@@ -15,14 +15,23 @@ if ($action === 'login' || $action === 'logout') {
 } else {
     $controller = new TaskController();
     switch ($action) {
-        case 'create':
+        case 'createTask':
             $controller->create();
             break;
-        case 'update':
+        case 'updateTask':
             $controller->update();
             break;
-        case 'delete':
+        case 'deleteTask':
             $controller->delete();
+            break;
+        case 'createCategory':
+            $controller->createCategory();
+            break;
+        case 'updateCategory':
+            $controller->updateCategory();
+            break;
+        case 'deleteCategory':
+            $controller->deleteCategory();
             break;
         case 'toggle':
             $controller->toggle();

@@ -12,41 +12,43 @@ class Task
     }
 
     public function read($user_id, $filter = 'all', $search = '', $sort = false, $category_id = null)
-{
-    $query = "SELECT tasks.*, categories.name AS category_name 
+    {
+        $query = "SELECT tasks.*, categories.name AS category_name 
               FROM tasks 
               LEFT JOIN categories ON tasks.category_id = categories.id 
               WHERE tasks.user_id = :user_id";
+
+        $params = [':user_id' => $user_id];
+
+        if ($filter === 'completed') {
+            $query .= " AND tasks.status = 'Completed'";
+        } elseif ($filter === 'incomplete') {
+            $query .= " AND tasks.status = 'Pending'";
+        }
+
+        if (isset($category_id)) {
+            $query .= " AND tasks.category_id = :category_id";
+            $params[':category_id'] = $category_id;
+        }
+
+        if (!empty($search)) {
+            $query .= " AND (tasks.title LIKE :search OR tasks.description LIKE :search)";
+            $params[':search'] = "%$search%";
+        }
+
+        if ($sort) {
+            $query .= " ORDER BY tasks.status ASC";
+        }
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // var_dump($result); // Kiểm tra dữ liệu trả về
+        // die();
+        return $result;
+    }
     
-    $params = [':user_id' => $user_id];
-
-    if ($filter === 'completed') {
-        $query .= " AND tasks.status = 'Completed'";
-    } elseif ($filter === 'incomplete') {
-        $query .= " AND tasks.status = 'Pending'";
-    }
-
-    if (isset($category_id) ) {
-        $query .= " AND tasks.category_id = :category_id";
-        $params[':category_id'] = $category_id;
-    }
-
-    if (!empty($search)) {
-        $query .= " AND (tasks.title LIKE :search OR tasks.description LIKE :search)";
-        $params[':search'] = "%$search%";
-    }
-
-    if ($sort) {
-        $query .= " ORDER BY tasks.status ASC";
-    }
-
-    $stmt = $this->db->prepare($query);
-    $stmt->execute($params);
-    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    // var_dump($result); // Kiểm tra dữ liệu trả về
-    // die();
-    return $result;
-}
+    
 
     public function create($title, $description, $user_id, $category_id)
     {

@@ -1,77 +1,217 @@
+// Biến để theo dõi trạng thái chỉnh sửa danh mục
+let isEditingCategory = false;
+// Biến lưu ID của danh mục đang được chỉnh sửa, null nếu không có danh mục nào đang chỉnh sửa
+let editingCategoryId = null;
+
+// Hàm thêm hoặc cập nhật danh mục
+function saveCategory() {
+    // Lấy phần tử input từ DOM bằng ID
+    const categoryNameInput = document.getElementById('categoryName');
+    // Lấy giá trị từ input và loại bỏ khoảng trắng thừa
+    const categoryName = categoryNameInput.value.trim();
+
+    // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
+    if (categoryName === '') {
+        alert('Please enter a category name!');
+        return false;
+    }
+
+    // Xác định hành động: thêm mới hay cập nhật
+    if (isEditingCategory) {
+        // Nếu đang chỉnh sửa, gửi yêu cầu POST đến endpoint '?action=updateCategory'
+        fetch('?action=updateCategory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${editingCategoryId}&name=${encodeURIComponent(categoryName)}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Kiểm tra nếu cập nhật thành công
+                if (data.success === true) {
+                    // Đặt lại trạng thái về thêm mới   
+                    isEditingCategory = false;
+                    editingCategoryId = null;
+                    // Xóa nội dung trong ô input
+                    categoryNameInput.value = '';
+                    // Đóng modal
+                    $('#categoryModal').modal('hide');
+                    // Tải lại trang để cập nhật giao diện
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Lỗi không xác định!');
+                    return;
+                }
+            })
+            .catch(error => {
+                alert('Lỗi kết nối đến server!');
+            });
+    } else {
+        // Nếu không phải chế độ chỉnh sửa, gửi yêu cầu POST để tạo danh mục mới
+        fetch('?action=createCategory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `name=${encodeURIComponent(categoryName)}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Kiểm tra nếu tạo danh mục thành công
+                if (data.success === true) {
+                    // Xóa nội dung trong ô input
+                    categoryNameInput.value = '';
+                    // Đóng modal
+                    $('#categoryModal').modal('hide');
+                    // Tải lại trang để cập nhật giao diện
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Lỗi không xác định!');
+                    return;
+                }
+            })
+            .catch(error => {
+                alert('Lỗi kết nối đến server!');
+            });
+    }
+}
+
+// Hàm để chỉnh sửa một danh mục hiện có
+function editCategory(categoryId, categoryName) {
+    // Điền thông tin danh mục vào ô input để người dùng chỉnh sửa
+    document.getElementById('categoryName').value = categoryName;
+    // Chuyển sang chế độ chỉnh sửa
+    isEditingCategory = true;
+    // Lưu ID của danh mục đang chỉnh sửa
+    editingCategoryId = categoryId;
+    // Cập nhật tiêu đề modal
+    document.getElementById('categoryModalLabel').innerText = 'Edit Category';
+    // Mở modal
+    $('#categoryModal').modal('show');
+}
+
+// Hàm mở modal để thêm danh mục mới
+function openAddCategoryModal() {
+    // Đặt lại trạng thái
+    isEditing = false;
+    editingCategoryId = null;
+    // Xóa nội dung input
+    document.getElementById('categoryName').value = '';
+    // Cập nhật tiêu đề modal
+    document.getElementById('categoryModalLabel').innerText = 'Add Category';
+    // Mở modal
+    $('#categoryModal').modal('show');
+}
+    
+function deleteCategory(task_id) {
+    fetch('?action=delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `task_id=${task_id}`
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
+}
+
+
+// Hàm thêm hoặc cập nhật task
 // Biến để theo dõi trạng thái chỉnh sửa: true nếu đang chỉnh sửa, false nếu đang thêm mới
 let isEditing = false;
 // Biến lưu ID của task đang được chỉnh sửa, null nếu không có task nào đang chỉnh sửa
 let editingTaskId = null;
-
-// Hàm thêm hoặc cập nhật task
 function addTask() {
     // Lấy các phần tử input từ DOM bằng ID
     const titleInput = document.getElementById('taskTitle');
     const descriptionInput = document.getElementById('taskDescription');
     const categoryInput = document.getElementById('taskCategory');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+
 
     // Lấy giá trị từ các input và loại bỏ khoảng trắng thừa
     const title = titleInput.value.trim();
     const description = descriptionInput.value.trim();
     const category_id = categoryInput.value;
+    const startTime = startTimeInput.value;
+    const endTime = endTimeInput.value;
+
+
 
     // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
-    // Nếu cả 3 trường đều rỗng, hiển thị cảnh báo và dừng hàm
+    // Nếu cả 5 trường đều rỗng, hiển thị cảnh báo và dừng hàm
     if (title === '' && description === '' && category_id === '') {
         alert('Please fill in all information!');
-        return;
+        return false;
+    } else if (!startTime || !endTime) {
+        alert('Vui lòng nhập cả thời gian bắt đầu và kết thúc!');
+        return false;
+    }
+    const startDateTime = new Date(startTime);
+    const endDateTime = new Date(endTime);
+    const now = new Date();
+    if (startDateTime < now) {
+        alert('Thời gian bắt đầu phải nằm trong tương lai!');
+        console.log(startDateTime);
+        return false;
+    }else if (endDateTime <= startDateTime) {
+        alert('Thời gian kết thúc phải sau thời gian bắt đầu!');
+        console.log(endDateTime);
+        return false;
     }
 
     // Kiểm tra trạng thái chỉnh sửa để quyết định tạo mới hay cập nhật task
     if (isEditing) {
         // Nếu đang chỉnh sửa, gửi yêu cầu POST đến endpoint '?action=update'
-        fetch('?action=update', {
+        fetch('?action=updateTask', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, // Định dạng dữ liệu gửi đi
             // Gửi dữ liệu bao gồm task_id, title, description và category_id
             body: `task_id=${editingTaskId}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}`
         })
-        .then(response => response.json()) // Chuyển phản hồi từ server thành JSON
-        .then(data => {
-            // Kiểm tra nếu cập nhật thành công
-            if (data.success == true) {
-                // Đặt lại trạng thái về thêm mới
-                isEditing = false;
-                editingTaskId = null;
-                // Xóa nội dung trong các ô input
-                titleInput.value = '';
-                descriptionInput.value = '';
-                categoryInput.value = '';
-                // Tải lại trang để cập nhật giao diện
-                window.location.reload();
-            }else{
-                alert(data.message);
-                return;
-            }
-        });
+            .then(response => response.json()) // Chuyển phản hồi từ server thành JSON
+            .then(data => {
+                // Kiểm tra nếu cập nhật thành công
+                if (data.success == true) {
+                    // Đặt lại trạng thái về thêm mới
+                    isEditing = false;
+                    editingTaskId = null;
+                    // Xóa nội dung trong các ô input
+                    titleInput.value = '';
+                    descriptionInput.value = '';
+                    categoryInput.value = '';
+                    // Tải lại trang để cập nhật giao diện
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                    return;
+                }
+            });
     } else {
+      
+
         // Nếu không phải chế độ chỉnh sửa, gửi yêu cầu POST để tạo task mới
-        fetch('?action=create', {
+        fetch('?action=createTask', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, // Định dạng dữ liệu gửi đi
             // Gửi dữ liệu bao gồm title, description và category_id
             body: `title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}`
         })
-        .then(response => response.json()) // Chuyển phản hồi từ server thành JSON
-        .then(data => {
-            // Kiểm tra nếu tạo task thành công
-            if (data.success === true) {
-                // Xóa nội dung trong các ô input
-                titleInput.value = '';
-                descriptionInput.value = '';
-                categoryInput.value = '';
-                // Tải lại trang để cập nhật giao diện
-                window.location.reload();
-            }else{
-                alert(data.message);
-                return;
-            }
-        });
+            .then(response => response.json()) // Chuyển phản hồi từ server thành JSON
+            .then(data => {
+                // Kiểm tra nếu tạo task thành công
+                if (data.success === true) {
+                    // Xóa nội dung trong các ô input
+                    titleInput.value = '';
+                    descriptionInput.value = '';
+                    categoryInput.value = '';
+                    // Tải lại trang để cập nhật giao diện
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                    return;
+                }
+            });
     }
 }
 
@@ -93,12 +233,12 @@ function deleteTask(task_id) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `task_id=${task_id}`
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        }
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
 }
 
 function toggleTask(task_id, completed) {
@@ -108,12 +248,12 @@ function toggleTask(task_id, completed) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `task_id=${task_id}&status=${status}`
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        }
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
 }
 
 function clearCompleted() {
@@ -122,12 +262,12 @@ function clearCompleted() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: ''
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        }
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
 }
 
 function sortTasks() {
@@ -152,7 +292,7 @@ function importTasks(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             try {
                 const importedTasks = JSON.parse(e.target.result);
                 importedTasks.forEach(task => {
@@ -173,7 +313,7 @@ function importTasks(event) {
     }
 }
 
-document.getElementById('taskTitle').addEventListener('keypress', function(e) {
+document.getElementById('taskTitle').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         addTask();
     }
