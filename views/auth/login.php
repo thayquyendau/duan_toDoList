@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="login-container">
-        <h2 class="text-center mb-4">Login</h2>
+        <h2 class="text-center mb-4">Dang nhap</h2>
         <?php if (isset($error)): ?>
             <div class="alert alert-danger"><?php echo $error; ?></div>
         <?php endif; ?>

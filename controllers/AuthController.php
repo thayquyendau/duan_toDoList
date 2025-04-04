@@ -31,6 +31,9 @@ class AuthController {
         }
     }
 
+    public function signin(){
+        require_once __DIR__ . '/../views/auth/signin.php';
+    }
     public function logout() {
         
         session_destroy();

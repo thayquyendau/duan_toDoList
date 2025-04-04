@@ -90,8 +90,9 @@ function editCategory(categoryId, categoryName) {
 // Hàm mở modal để thêm danh mục mới
 function openAddCategoryModal() {
     // Đặt lại trạng thái
-    isEditing = false;
+    isEditingCategory = false;
     editingCategoryId = null;
+    
     // Xóa nội dung input
     document.getElementById('categoryName').value = '';
     // Cập nhật tiêu đề modal
@@ -100,11 +101,11 @@ function openAddCategoryModal() {
     $('#categoryModal').modal('show');
 }
     
-function deleteCategory(task_id) {
-    fetch('?action=delete', {
+function deleteCategory(categoryId) {
+    fetch('?action=deleteCategory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `task_id=${task_id}`
+        body: `id=${categoryId}`
     })
         .then(response => response.json())
         .then(data => {
@@ -135,7 +136,6 @@ function addTask() {
     const category_id = categoryInput.value;
     const startTime = startTimeInput.value;
     const endTime = endTimeInput.value;
-
 
 
     // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
@@ -188,8 +188,6 @@ function addTask() {
                 }
             });
     } else {
-      
-
         // Nếu không phải chế độ chỉnh sửa, gửi yêu cầu POST để tạo task mới
         fetch('?action=createTask', {
             method: 'POST',
@@ -220,11 +218,27 @@ function editTask(task_id, title, description, category_id) {
     // Điền thông tin task vào các ô input để người dùng chỉnh sửa
     document.getElementById('taskTitle').value = title;
     document.getElementById('taskDescription').value = description;
-    document.getElementById('taskCategory').value = category_id || ''; // Nếu category_id không có thì để rỗng
+    document.getElementById('taskCategory').value = category_id || '';
+    document.getElementById('exampleModalLabel').innerText = 'Edit Task'; // Nếu category_id không có thì để rỗng
     // Chuyển sang chế độ chỉnh sửa
     isEditing = true;
     // Lưu ID của task đang chỉnh sửa
     editingTaskId = task_id;
+}
+
+function openAddTaskModal() {
+    // Đặt lại trạng thái
+    isEditing = false;
+    editingId = null;
+    
+    // Xóa nội dung input
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskDescription').value = '';
+    document.getElementById('taskCategory').value = '';
+    // Cập nhật tiêu đề modal
+    document.getElementById('exampleModalLabel').innerText = 'Add Task';
+    // Mở modal
+    $('#taskModal').modal('show');
 }
 
 function deleteTask(task_id) {
@@ -246,7 +260,7 @@ function toggleTask(task_id, completed) {
     fetch('?action=toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `task_id=${task_id}&status=${status}`
+        body: `task_id=${task_id}&status=${status}` 
     })
         .then(response => response.json())
         .then(data => {

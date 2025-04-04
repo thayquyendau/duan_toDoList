@@ -68,6 +68,12 @@ class Task
         return $stmt->execute([$status, $task_id]);
     }
 
+    public function deleteTasksByCategory($category_id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM tasks WHERE category_id = ?");
+        return $stmt->execute([$category_id]);
+    }
+
     public function delete($task_id)
     {
         $stmt = $this->db->prepare("DELETE FROM tasks WHERE task_id = ?");

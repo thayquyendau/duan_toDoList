@@ -95,7 +95,9 @@ class TaskController
     public function deleteCategory()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $category_id = $_POST['category_id'];
+            $category_id = $_POST['id'];
+            // Xóa tất cả các task thuộc danh mục này
+            $this->taskModel->deleteTasksByCategory($category_id);
             $this->categoryModel->deleteCategory($category_id);
             echo json_encode(['success' => true]);
         }

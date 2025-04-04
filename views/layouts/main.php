@@ -60,7 +60,7 @@
             <button type="button" class="btn btn-info" onclick="openAddCategoryModal()">
                 <i class="fas fa-plus"></i> Add Category
             </button>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#taskModal">
+            <button type="button" class="btn btn-primary" onclick="openAddTaskModal()" >
                 <i class="fas fa-plus"></i> Add Task
             </button>
         </div>
@@ -137,7 +137,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Add / Edit Task</h5>
+                        <h5 class="modal-title" id="exampleModalLabel"></h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="">
