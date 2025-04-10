@@ -16,6 +16,20 @@ class User {
        return $user;
     }
 
+    public function userExists($username, $email) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+        $stmt->execute([$username, $email]);
+        return $stmt->fetch(); 
+    }
+    
+
+    public function createUser($username, $email, $password) {
+        $stmt = $this->db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+        return $stmt->execute([$username, $email, $password]);
+    }
+    
+ 
+
     public function getUserById($user_id) {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE user_id = ?");
         $stmt->execute([$user_id]);

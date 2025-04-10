@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
-
 
 </head>
 
@@ -24,7 +23,7 @@
         <div class="p-3">
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search tasks..." value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="text" class="form-control" id="searchInput" onchange="searchTasks()" placeholder="Search tasks..." value="<?php echo htmlspecialchars($search); ?>">
                 </div>
                 <div class="col-md-6">
                     <select class="form-select" id="filterSelect" onchange="filterTasks()">
@@ -60,7 +59,7 @@
             <button type="button" class="btn btn-info" onclick="openAddCategoryModal()">
                 <i class="fas fa-plus"></i> Add Category
             </button>
-            <button type="button" class="btn btn-primary" onclick="openAddTaskModal()" >
+            <button type="button" class="btn btn-primary" onclick="openAddTaskModal()">
                 <i class="fas fa-plus"></i> Add Task
             </button>
         </div>
@@ -106,34 +105,64 @@
                             <?php else: ?>
                                 <?php foreach ($categoryData['tasks'] as $task): ?>
                                     <div class="task-item <?php echo $task['status'] === 'Completed' ? 'completed' : ''; ?>"
-                                        data-id="<?php echo $task['task_id']; ?>">
-                                        <input type="checkbox" class="form-check-input me-2"
-                                            <?php echo $task['status'] === 'Completed' ? 'checked' : ''; ?>
-                                            onchange="toggleTask(<?php echo $task['task_id']; ?>, this.checked)">
-                                        <span class="flex-grow-1">
+                                        data-id="<?php echo $task['task_id']; ?>" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <!-- Cột 1: Tiêu đề và mô tả -->
+                                        <div class="task-info" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
                                             <strong><?php echo htmlspecialchars($task['title']); ?></strong>
-                                            <small class="d-block text-muted"><?php echo htmlspecialchars($task['description']); ?></small>
-                                        </span>
-                                        <button class="btn btn-warning btn-sm btn-action me-2"
-                                            data-bs-toggle="modal" data-bs-target="#taskModal"
-                                            onclick="editTask(<?php echo $task['task_id']; ?>, '<?php echo addslashes($task['title']); ?>', '<?php echo addslashes($task['description']); ?>', '<?php echo $task['category_id'] ?: ''; ?>')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger btn-sm btn-action"
-                                            onclick="deleteTask(<?php echo $task['task_id']; ?>)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                            <small class="d-block "><?php echo htmlspecialchars($task['description']); ?></small>
+                                        </div>
+                                        <!-- Xử lý định dạng thời gian -->
+                                        <?php
+                                        $end = new DateTime($task['end_time'], new DateTimeZone('Asia/Ho_Chi_Minh'));
+                                        $endISO = $end->format('c');
+                                        ?>
+                                        <!-- Cột 2: Thời gian còn lại -->
+                                        <div class="task-time" style="flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center;">
+                                            <small class="d-block text-muted start-end-time">
+                                                🕒 Bắt đầu: <?php echo $task['start_time']; ?>
+                                            </small>
+                                            <small class="d-block text-muted start-end-time">
+                                                ⏳ Kết thúc: <?php echo $task['end_time']; ?>
+                                            </small>
+
+                                            <small class="d-block text-muted text-danger">
+                                                ⏰ Còn lại:
+                                                <span class="countdown"
+                                                    id="countdown-<?php echo $task['task_id']; ?>"
+                                                    data-end-time="<?php echo $endISO; ?>"></span>
+                                            </small>
+                                        </div>
+
+                                        <!-- Cột 3: Checkbox và nút hành động -->
+                                        <div class="task-actions" style="display: flex; gap: 8px; align-items: center;">
+                                            <input type="checkbox" class="form-check-input me-2"
+                                                <?php echo $task['status'] === 'Completed' ? 'checked' : ''; ?>
+                                                onchange="toggleTask(<?php echo $task['task_id']; ?>, this.checked)">
+
+                                            <button class="btn btn-warning btn-sm btn-action me-2"
+                                                data-bs-toggle="modal" data-bs-target="#taskModal"
+                                                onclick="editTask(<?php echo $task['task_id']; ?>, '<?php echo addslashes($task['title']); ?>', '<?php echo addslashes($task['description']); ?>', '<?php echo $task['category_id'] ?: ''; ?>', '<?php echo $task['start_time']; ?>', '<?php echo $task['end_time']; ?>')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm btn-action"
+                                                onclick="deleteTask(<?php echo $task['task_id']; ?>)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
+
+
+
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
 
         <!-- Modal thêm, sửa nhiệm vụ-->
-        <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -161,10 +190,10 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <input type="datetime-local" class="form-control" id="startTime">
+                                    <input type="datetime-local" name="start_time" class="form-control" id="startTime">
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <input type="datetime-local" class="form-control" id="endTime">
+                                    <input type="datetime-local" name="end_time" class="form-control" id="endTime">
                                 </div>
                             </div>
                         </div>

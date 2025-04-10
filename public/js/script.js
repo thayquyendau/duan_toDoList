@@ -1,3 +1,4 @@
+
 // Biến để theo dõi trạng thái chỉnh sửa danh mục
 let isEditingCategory = false;
 // Biến lưu ID của danh mục đang được chỉnh sửa, null nếu không có danh mục nào đang chỉnh sửa
@@ -12,7 +13,7 @@ function saveCategory() {
 
     // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
     if (categoryName === '') {
-        alert('Please enter a category name!');
+        alert('Vui lòng điền tên danh mục!');
         return false;
     }
 
@@ -92,7 +93,7 @@ function openAddCategoryModal() {
     // Đặt lại trạng thái
     isEditingCategory = false;
     editingCategoryId = null;
-    
+
     // Xóa nội dung input
     document.getElementById('categoryName').value = '';
     // Cập nhật tiêu đề modal
@@ -100,7 +101,7 @@ function openAddCategoryModal() {
     // Mở modal
     $('#categoryModal').modal('show');
 }
-    
+
 function deleteCategory(categoryId) {
     fetch('?action=deleteCategory', {
         method: 'POST',
@@ -116,125 +117,160 @@ function deleteCategory(categoryId) {
 }
 
 
-// Hàm thêm hoặc cập nhật task
-// Biến để theo dõi trạng thái chỉnh sửa: true nếu đang chỉnh sửa, false nếu đang thêm mới
 let isEditing = false;
-// Biến lưu ID của task đang được chỉnh sửa, null nếu không có task nào đang chỉnh sửa
 let editingTaskId = null;
+
+const titleInput = document.getElementById('taskTitle');
+const descriptionInput = document.getElementById('taskDescription');
+const categoryInput = document.getElementById('taskCategory');
+const startTimeInput = document.getElementById('startTime');
+const endTimeInput = document.getElementById('endTime');
+
+function formatDateToDB(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function formatDateToLocal(datetimeString) {
+    if (!datetimeString) return "";
+    const date = new Date(datetimeString);
+    if (isNaN(date.getTime())) {
+        console.error("Không thể chuyển đổi datetime:", datetimeString);
+        return "";
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// GỌI KHI BẤM "LƯU" TRONG FORM
 function addTask() {
-    // Lấy các phần tử input từ DOM bằng ID
-    const titleInput = document.getElementById('taskTitle');
-    const descriptionInput = document.getElementById('taskDescription');
-    const categoryInput = document.getElementById('taskCategory');
-    const startTimeInput = document.getElementById('startTime');
-    const endTimeInput = document.getElementById('endTime');
-
-
-    // Lấy giá trị từ các input và loại bỏ khoảng trắng thừa
     const title = titleInput.value.trim();
     const description = descriptionInput.value.trim();
     const category_id = categoryInput.value;
     const startTime = startTimeInput.value;
     const endTime = endTimeInput.value;
 
+    console.log("addTask called with isEditing:", isEditing, "editingTaskId:", editingTaskId);
+    console.log("Form values:", { title, description, category_id, startTime, endTime });
 
-    // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
-    // Nếu cả 5 trường đều rỗng, hiển thị cảnh báo và dừng hàm
-    if (title === '' && description === '' && category_id === '') {
-        alert('Please fill in all information!');
-        return false;
-    } else if (!startTime || !endTime) {
-        alert('Vui lòng nhập cả thời gian bắt đầu và kết thúc!');
-        return false;
+    // Validate input
+    if (!title || !description || !category_id) {
+        console.log("Validation failed: Missing title, description, or category_id");
+        alert("Vui lòng nhập đầy đủ thông tin!");
+        return;
     }
-    const startDateTime = new Date(startTime);
-    const endDateTime = new Date(endTime);
+
+    if (!startTime || !endTime) {
+        console.log("Validation failed: Missing startTime or endTime");
+        alert("Vui lòng nhập thời gian bắt đầu và kết thúc!");
+        return;
+    }
+
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
     const now = new Date();
-    if (startDateTime < now) {
-        alert('Thời gian bắt đầu phải nằm trong tương lai!');
-        console.log(startDateTime);
-        return false;
-    }else if (endDateTime <= startDateTime) {
-        alert('Thời gian kết thúc phải sau thời gian bắt đầu!');
-        console.log(endDateTime);
-        return false;
+    console.log("Dates:", { startDate, endDate, now });
+
+    if (startDate < now) {
+        console.log("Validation failed: startDate is in the past");
+        alert("Thời gian bắt đầu phải lớn hơn thời gian hiện tại!");
+        return;
     }
 
-    // Kiểm tra trạng thái chỉnh sửa để quyết định tạo mới hay cập nhật task
-    if (isEditing) {
-        // Nếu đang chỉnh sửa, gửi yêu cầu POST đến endpoint '?action=update'
-        fetch('?action=updateTask', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, // Định dạng dữ liệu gửi đi
-            // Gửi dữ liệu bao gồm task_id, title, description và category_id
-            body: `task_id=${editingTaskId}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}`
-        })
-            .then(response => response.json()) // Chuyển phản hồi từ server thành JSON
-            .then(data => {
-                // Kiểm tra nếu cập nhật thành công
-                if (data.success == true) {
-                    // Đặt lại trạng thái về thêm mới
-                    isEditing = false;
-                    editingTaskId = null;
-                    // Xóa nội dung trong các ô input
-                    titleInput.value = '';
-                    descriptionInput.value = '';
-                    categoryInput.value = '';
-                    // Tải lại trang để cập nhật giao diện
-                    window.location.reload();
-                } else {
-                    alert(data.message);
-                    return;
-                }
-            });
-    } else {
-        // Nếu không phải chế độ chỉnh sửa, gửi yêu cầu POST để tạo task mới
-        fetch('?action=createTask', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, // Định dạng dữ liệu gửi đi
-            // Gửi dữ liệu bao gồm title, description và category_id
-            body: `title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}`
-        })
-            .then(response => response.json()) // Chuyển phản hồi từ server thành JSON
-            .then(data => {
-                // Kiểm tra nếu tạo task thành công
-                if (data.success === true) {
-                    // Xóa nội dung trong các ô input
-                    titleInput.value = '';
-                    descriptionInput.value = '';
-                    categoryInput.value = '';
-                    // Tải lại trang để cập nhật giao diện
-                    window.location.reload();
-                } else {
-                    alert(data.message);
-                    return;
-                }
-            });
+    if (endDate <= startDate) {
+        console.log("Validation failed: endDate is not after startDate");
+        alert("Thời gian kết thúc phải sau thời gian bắt đầu!");
+        return;
     }
+
+    const startFormatted = formatDateToDB(startDate);
+    const endFormatted = formatDateToDB(endDate);
+    console.log("Formatted dates:", { startFormatted, endFormatted });
+
+    const url = isEditing ? '?action=updateTask' : '?action=createTask';
+    const body = isEditing
+        ? `task_id=${editingTaskId}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}&start_time=${startFormatted}&end_time=${endFormatted}`
+        : `title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}&start_time=${startFormatted}&end_time=${endFormatted}`;
+    console.log("Sending fetch request:", { url, body });
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+    })
+        .then(response => {
+            console.log("Fetch response:", response);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Server response data:", data);
+            if (data.success) {
+                // Reset form
+                titleInput.value = '';
+                descriptionInput.value = '';
+                categoryInput.value = '';
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                isEditing = false;
+                editingTaskId = null;
+                $('#taskModal').modal('hide');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Đã xảy ra lỗi!');
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+            alert('Lỗi kết nối đến server!');
+        });
 }
 
-// Hàm để chỉnh sửa một task hiện có
-function editTask(task_id, title, description, category_id) {
-    // Điền thông tin task vào các ô input để người dùng chỉnh sửa
-    document.getElementById('taskTitle').value = title;
-    document.getElementById('taskDescription').value = description;
-    document.getElementById('taskCategory').value = category_id || '';
-    document.getElementById('exampleModalLabel').innerText = 'Edit Task'; // Nếu category_id không có thì để rỗng
-    // Chuyển sang chế độ chỉnh sửa
+// GỌI KHI NHẤN NÚT "SỬA"
+function editTask(task_id, title, description, category_id, start_time, end_time) {
+    console.log("Starting editTask with:", { task_id, title, description, category_id, start_time, end_time });
     isEditing = true;
-    // Lưu ID của task đang chỉnh sửa
     editingTaskId = task_id;
+    // console.log("isEditing:", isEditing, "editingTaskId:", editingTaskId);
+
+    // Điền thông tin vào các ô input
+    titleInput.value = title || '';
+    descriptionInput.value = description || '';
+    categoryInput.value = category_id || '';
+    startTimeInput.value = formatDateToLocal(start_time);
+    endTimeInput.value = formatDateToLocal(end_time);
+    console.log("Form values after population:", {
+        title: titleInput.value,
+        description: descriptionInput.value,
+        category: categoryInput.value,
+        startTime: startTimeInput.value,
+        endTime: endTimeInput.value
+    }); 
+
+    document.getElementById('exampleModalLabel').innerText = 'Cập nhật Task';
+    $('#taskModal').modal('show');
 }
+
 
 function openAddTaskModal() {
     // Đặt lại trạng thái
     isEditing = false;
     editingId = null;
-    
+
     // Xóa nội dung input
     document.getElementById('taskTitle').value = '';
     document.getElementById('taskDescription').value = '';
     document.getElementById('taskCategory').value = '';
+    document.getElementById('startTime').value = '';
+    document.getElementById('endTime').value = '';
     // Cập nhật tiêu đề modal
     document.getElementById('exampleModalLabel').innerText = 'Add Task';
     // Mở modal
@@ -242,7 +278,7 @@ function openAddTaskModal() {
 }
 
 function deleteTask(task_id) {
-    fetch('?action=delete', {
+    fetch('?action=deleteTask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `task_id=${task_id}`
@@ -260,7 +296,7 @@ function toggleTask(task_id, completed) {
     fetch('?action=toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `task_id=${task_id}&status=${status}` 
+        body: `task_id=${task_id}&status=${status}`
     })
         .then(response => response.json())
         .then(data => {
@@ -346,3 +382,32 @@ function filterTasksByCategory() {
     const newUrl = `?filter=${filter}&search=${encodeURIComponent(search)}&sort=${sort}&category_id=${categoryId}`;
     window.location.href = newUrl;
 }
+
+// Hàm xử lí thời gian
+document.querySelectorAll(".countdown").forEach((countdownEl) => {
+    const endTimeStr = countdownEl.dataset.endTime;
+    const endTime = new Date(endTimeStr).getTime();
+
+    let intervalId; // ✅ Khai báo biến ở đây trước khi dùng trong hàm bên dưới
+
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+
+        if (distance <= 0) {
+            countdownEl.innerText = "Đã kết thúc";
+            clearInterval(intervalId); // ✅ Bây giờ không còn lỗi nữa
+            return;
+        }
+
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        countdownEl.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        countdownEl.style.color = "red";
+    }
+
+    updateCountdown();
+    intervalId = setInterval(updateCountdown, 1000); // ✅ Gán sau khi khai báo
+});

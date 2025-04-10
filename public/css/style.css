@@ -106,3 +106,18 @@ body {
     text-decoration: line-through;
     color: #888;
 }
+/* Ẩn giờ bắt đầu và kết thúc */
+.start-end-time {
+    display: none !important;
+}
+
+/* Định dạng phần thời gian còn lại */
+.text-danger {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #d9534f; /* Màu đỏ nổi bật */
+    text-align: center; /* Căn giữa */
+}
+
+
+

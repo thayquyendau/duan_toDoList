@@ -111,9 +111,11 @@ class TaskController
             $description = $_POST['description'];
             $category_id = $_POST['category_id'];
             $user_id = $_SESSION['user_id'];
+            $start_time = $_POST['start_time'];
+            $end_time = $_POST['end_time'];
 
-            if (!empty($title) && !empty($description) && !empty($category_id)) {
-                $this->taskModel->create($title, $description, $user_id, $category_id);
+            if (!empty($title) && !empty($description) && !empty($category_id) && !empty($start_time) && !empty($end_time)) {
+                $this->taskModel->create($title, $description, $user_id, $category_id, $start_time, $end_time);
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Please fill in all information!']);
@@ -123,17 +125,16 @@ class TaskController
 
     public function update()
     {
-
-
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $task_id = $_POST['task_id'];
             $title = $_POST['title'];
             $description = $_POST['description'];
             $category_id = $_POST['category_id'];
+            $start_time = $_POST['start_time'];
+            $end_time = $_POST['end_time'];
 
-            if ($title !== '' && $description !== '' && $category_id !== '') {
-                $this->taskModel->update($task_id, $title, $description, $category_id);
+            if ($title !== '' && $description !== '' && $category_id !== '' && $start_time !== '' && $end_time !== '') {
+                $this->taskModel->update($task_id, $title, $description, $category_id, $start_time, $end_time);
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Please fill in all information!']);

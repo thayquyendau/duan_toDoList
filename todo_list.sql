@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 03, 2025 lúc 09:56 AM
+-- Thời gian đã tạo: Th4 08, 2025 lúc 09:54 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -37,7 +37,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`) VALUES
-(1, 'Work'),
+(1, 'Learning'),
 (2, 'Personal'),
 (3, 'Shopping');
 
@@ -51,10 +51,10 @@ CREATE TABLE `tasks` (
   `task_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` text NOT NULL,
-  `status` enum('Pending','Completed') NOT NULL DEFAULT 'Pending',
+  `status` enum('Pending','Completed') DEFAULT 'Pending',
   `start_time` datetime DEFAULT NULL,
-  `end-time` datetime DEFAULT NULL,
-  `user_id` int(11) NOT NULL,
+  `end_time` datetime DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `category_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -64,15 +64,18 @@ CREATE TABLE `tasks` (
 -- Đang đổ dữ liệu cho bảng `tasks`
 --
 
-INSERT INTO `tasks` (`task_id`, `title`, `description`, `status`, `start_time`, `end-time`, `user_id`, `category_id`, `created_at`, `updated_at`) VALUES
-(14, 'Làm Project Nâng cao', 'Lab 1, Lab 2', 'Completed', NULL, NULL, 1, 1, '2025-03-30 02:36:14', '2025-04-01 15:15:53'),
+INSERT INTO `tasks` (`task_id`, `title`, `description`, `status`, `start_time`, `end_time`, `user_id`, `category_id`, `created_at`, `updated_at`) VALUES
+(14, 'Làm Project Nâng cao', 'Lab 1, Lab 2', 'Completed', '2025-04-07 14:04:30', '2025-04-07 16:04:42', 1, 1, '2025-03-30 02:36:14', '2025-04-08 07:35:38'),
 (18, 'Đi ngủ', 'ngủ sớm trước 10h', 'Pending', NULL, NULL, 1, 2, '2025-04-01 08:36:02', '2025-04-01 08:36:02'),
 (19, 'Mua thức ăn', 'Milk, bread, eggs', 'Pending', NULL, NULL, 1, 3, '2025-04-01 14:14:49', '2025-04-01 14:14:49'),
-(21, 'Dự án tốt nghiệp', 'Quản lí trường học', 'Pending', NULL, NULL, 1, 1, '2025-04-01 15:27:27', '2025-04-01 15:27:27'),
+(21, 'Dự án tốt nghiệp', 'Quản lí trường học', 'Pending', NULL, NULL, 1, 3, '2025-04-01 15:27:27', '2025-04-04 04:13:37'),
 (22, 'Buy groceries', '123', 'Pending', NULL, NULL, 1, 2, '2025-04-01 15:51:11', '2025-04-01 15:51:11'),
-(23, 'Đi học', 'Đến trường sớm 15p', 'Pending', NULL, NULL, 1, 1, '2025-04-01 16:08:04', '2025-04-01 16:08:04'),
-(24, 'ccc', 'Milk, bread, eggs', 'Pending', NULL, NULL, 1, 1, '2025-04-01 16:09:11', '2025-04-01 16:09:11'),
-(25, 'Uống thuốc', 'ho', 'Pending', NULL, NULL, 1, 2, '2025-04-01 16:15:11', '2025-04-01 16:15:11');
+(23, 'Đi học sớm', 'Đến trường sớm 15p', 'Completed', NULL, NULL, 1, 1, '2025-04-01 16:08:04', '2025-04-08 07:41:55'),
+(25, 'Uống thuốc', 'ho', 'Pending', NULL, NULL, 1, 2, '2025-04-01 16:15:11', '2025-04-01 16:15:11'),
+(29, 'Ngủ 8h', 'tốt cho sức khỏe', 'Pending', NULL, NULL, 1, 2, '2025-04-04 03:14:21', '2025-04-04 03:14:21'),
+(32, 'Nấu ăn', 'Canh chua cá lóc', 'Pending', NULL, NULL, 1, 2, '2025-04-07 08:47:40', '2025-04-07 08:47:40'),
+(34, 'Debug', 'on tap debug', 'Pending', '2025-04-07 23:17:00', '2025-04-08 23:15:00', 1, 1, '2025-04-07 16:15:48', '2025-04-07 16:15:48'),
+(35, '08/04/2025', 'hoom nayt', 'Pending', '2025-04-08 14:50:00', '2025-04-08 14:55:00', 1, 1, '2025-04-08 07:41:09', '2025-04-08 07:41:09');
 
 -- --------------------------------------------------------
 
@@ -130,13 +133,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT cho bảng `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT cho bảng `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT cho bảng `users`

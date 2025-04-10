@@ -50,16 +50,16 @@ class Task
     
     
 
-    public function create($title, $description, $user_id, $category_id)
+    public function create($title, $description, $user_id, $category_id, $start_time, $end_time)
     {
-        $stmt = $this->db->prepare("INSERT INTO tasks (title, description, user_id, category_id) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$title, $description, $user_id, $category_id]);
+        $stmt = $this->db->prepare("INSERT INTO tasks (title, description, user_id, category_id, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$title, $description, $user_id, $category_id, $start_time, $end_time]);
     }
 
-    public function update($task_id, $title, $description, $category_id)
+    public function update($task_id, $title, $description, $category_id, $start_time, $end_time)
     {
-        $stmt = $this->db->prepare("UPDATE tasks SET title = ?, description = ?, category_id = ? WHERE task_id = ?");
-        return $stmt->execute([$title, $description, $category_id, $task_id]);
+        $stmt = $this->db->prepare("UPDATE tasks SET title = ?, description = ?, category_id = ?, start_time = ?, end_time = ? WHERE task_id = ?");
+        return $stmt->execute([$task_id, $title, $description, $category_id, $start_time, $end_time]);
     }
 
     public function toggle($task_id, $status)

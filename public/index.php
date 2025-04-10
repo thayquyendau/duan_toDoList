@@ -5,12 +5,12 @@ require_once __DIR__ . '/../controllers/AuthController.php';
 
 $action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
-if ($action === 'login'|| $action === 'signin' || $action === 'logout') {
+if ($action === 'login'|| $action === 'register' || $action === 'logout') {
     $controller = new AuthController();
     if ($action === 'login') {
         $controller->login();
-    }elseif($action === 'signin'){
-        $controller->signin();
+    }elseif($action === 'register'){
+        $controller->register();
     }
      else {
         $controller->logout();
