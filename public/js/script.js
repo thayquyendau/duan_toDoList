@@ -1,121 +1,110 @@
-
-// Biến để theo dõi trạng thái chỉnh sửa danh mục
 let isEditingCategory = false;
-// Biến lưu ID của danh mục đang được chỉnh sửa, null nếu không có danh mục nào đang chỉnh sửa
 let editingCategoryId = null;
 
-// Hàm thêm hoặc cập nhật danh mục
 function saveCategory() {
-    // Lấy phần tử input từ DOM bằng ID
     const categoryNameInput = document.getElementById('categoryName');
-    // Lấy giá trị từ input và loại bỏ khoảng trắng thừa
     const categoryName = categoryNameInput.value.trim();
 
-    // Kiểm tra xem người dùng đã nhập đầy đủ thông tin chưa
     if (categoryName === '') {
-        alert('Vui lòng điền tên danh mục!');
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Vui lòng điền tên danh mục!'
+        });
         return false;
     }
 
-    // Xác định hành động: thêm mới hay cập nhật
-    if (isEditingCategory) {
-        // Nếu đang chỉnh sửa, gửi yêu cầu POST đến endpoint '?action=updateCategory'
-        fetch('?action=updateCategory', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${editingCategoryId}&name=${encodeURIComponent(categoryName)}`
-        })
-            .then(response => response.json())
-            .then(data => {
-                // Kiểm tra nếu cập nhật thành công
-                if (data.success === true) {
-                    // Đặt lại trạng thái về thêm mới   
-                    isEditingCategory = false;
-                    editingCategoryId = null;
-                    // Xóa nội dung trong ô input
-                    categoryNameInput.value = '';
-                    // Đóng modal
-                    $('#categoryModal').modal('hide');
-                    // Tải lại trang để cập nhật giao diện
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Lỗi không xác định!');
-                    return;
-                }
-            })
-            .catch(error => {
-                alert('Lỗi kết nối đến server!');
-            });
-    } else {
-        // Nếu không phải chế độ chỉnh sửa, gửi yêu cầu POST để tạo danh mục mới
-        fetch('?action=createCategory', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `name=${encodeURIComponent(categoryName)}`
-        })
-            .then(response => response.json())
-            .then(data => {
-                // Kiểm tra nếu tạo danh mục thành công
-                if (data.success === true) {
-                    // Xóa nội dung trong ô input
-                    categoryNameInput.value = '';
-                    // Đóng modal
-                    $('#categoryModal').modal('hide');
-                    // Tải lại trang để cập nhật giao diện
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Lỗi không xác định!');
-                    return;
-                }
-            })
-            .catch(error => {
-                alert('Lỗi kết nối đến server!');
-            });
-    }
-}
+    const url = isEditingCategory ? '?action=updateCategory' : '?action=createCategory';
+    const body = isEditingCategory ? `id=${editingCategoryId}&name=${encodeURIComponent(categoryName)}` : `name=${encodeURIComponent(categoryName)}`;
 
-// Hàm để chỉnh sửa một danh mục hiện có
-function editCategory(categoryId, categoryName) {
-    // Điền thông tin danh mục vào ô input để người dùng chỉnh sửa
-    document.getElementById('categoryName').value = categoryName;
-    // Chuyển sang chế độ chỉnh sửa
-    isEditingCategory = true;
-    // Lưu ID của danh mục đang chỉnh sửa
-    editingCategoryId = categoryId;
-    // Cập nhật tiêu đề modal
-    document.getElementById('categoryModalLabel').innerText = 'Edit Category';
-    // Mở modal
-    $('#categoryModal').modal('show');
-}
-
-// Hàm mở modal để thêm danh mục mới
-function openAddCategoryModal() {
-    // Đặt lại trạng thái
-    isEditingCategory = false;
-    editingCategoryId = null;
-
-    // Xóa nội dung input
-    document.getElementById('categoryName').value = '';
-    // Cập nhật tiêu đề modal
-    document.getElementById('categoryModalLabel').innerText = 'Add Category';
-    // Mở modal
-    $('#categoryModal').modal('show');
-}
-
-function deleteCategory(categoryId) {
-    fetch('?action=deleteCategory', {
+    fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id=${categoryId}`
+        body: body
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: isEditingCategory ? 'Cập nhật thành công' : 'Thêm thành công',
+                    text: isEditingCategory ? 'Danh mục đã được cập nhật.' : 'Danh mục đã được thêm.'
+                }).then(() => {
+                    isEditingCategory = false;
+                    editingCategoryId = null;
+                    categoryNameInput.value = '';
+                    $('#categoryModal').modal('hide');
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: data.message || 'Đã xảy ra lỗi!'
+                });
             }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Lỗi kết nối đến server!'
+            });
         });
 }
 
+function editCategory(categoryId, categoryName) {
+    document.getElementById('categoryName').value = categoryName;
+    isEditingCategory = true;
+    editingCategoryId = categoryId;
+    document.getElementById('categoryModalLabel').innerText = 'Edit Category';
+    $('#categoryModal').modal('show');
+}
+
+function openAddCategoryModal() {
+    isEditingCategory = false;
+    editingCategoryId = null;
+    document.getElementById('categoryName').value = '';
+    document.getElementById('categoryModalLabel').innerText = 'Add Category';
+    $('#categoryModal').modal('show');
+}
+
+function deleteCategory(categoryId) {
+    Swal.fire({
+        title: 'Bạn có chắc không?',
+        text: 'Danh mục và tất cả task liên quan sẽ bị xóa!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('?action=deleteCategory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `id=${categoryId}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Xóa thành công',
+                            text: 'Danh mục đã được xóa.'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message || 'Đã xảy ra lỗi!'
+                        });
+                    }
+                });
+        }
+    });
+}
 
 let isEditing = false;
 let editingTaskId = null;
@@ -151,7 +140,26 @@ function formatDateToLocal(datetimeString) {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-// GỌI KHI BẤM "LƯU" TRONG FORM
+function setDefaultStartTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    startTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    startTimeInput.disabled = true;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    setDefaultStartTime();
+    $('#taskModal').on('hidden.bs.modal', function () {
+        setDefaultStartTime();
+        isEditing = false;
+        editingTaskId = null;
+    });
+});
+
 function addTask() {
     const title = titleInput.value.trim();
     const description = descriptionInput.value.trim();
@@ -159,136 +167,143 @@ function addTask() {
     const startTime = startTimeInput.value;
     const endTime = endTimeInput.value;
 
-    console.log("addTask called with isEditing:", isEditing, "editingTaskId:", editingTaskId);
-    console.log("Form values:", { title, description, category_id, startTime, endTime });
-
-    // Validate input
     if (!title || !description || !category_id) {
-        console.log("Validation failed: Missing title, description, or category_id");
-        alert("Vui lòng nhập đầy đủ thông tin!");
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Vui lòng nhập đầy đủ thông tin!'
+        });
         return;
     }
 
     if (!startTime || !endTime) {
-        console.log("Validation failed: Missing startTime or endTime");
-        alert("Vui lòng nhập thời gian bắt đầu và kết thúc!");
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Vui lòng nhập thời gian bắt đầu và kết thúc!'
+        });
         return;
     }
 
     const startDate = new Date(startTime);
     const endDate = new Date(endTime);
-    const now = new Date();
-    console.log("Dates:", { startDate, endDate, now });
-
-    if (startDate < now) {
-        console.log("Validation failed: startDate is in the past");
-        alert("Thời gian bắt đầu phải lớn hơn thời gian hiện tại!");
-        return;
-    }
 
     if (endDate <= startDate) {
-        console.log("Validation failed: endDate is not after startDate");
-        alert("Thời gian kết thúc phải sau thời gian bắt đầu!");
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Thời gian kết thúc phải sau thời gian bắt đầu!'
+        });
         return;
     }
 
     const startFormatted = formatDateToDB(startDate);
     const endFormatted = formatDateToDB(endDate);
-    console.log("Formatted dates:", { startFormatted, endFormatted });
 
     const url = isEditing ? '?action=updateTask' : '?action=createTask';
     const body = isEditing
         ? `task_id=${editingTaskId}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}&start_time=${startFormatted}&end_time=${endFormatted}`
         : `title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&category_id=${category_id}&start_time=${startFormatted}&end_time=${endFormatted}`;
-    console.log("Sending fetch request:", { url, body });
 
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body
     })
-        .then(response => {
-            console.log("Fetch response:", response);
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log("Server response data:", data);
             if (data.success) {
-                // Reset form
-                titleInput.value = '';
-                descriptionInput.value = '';
-                categoryInput.value = '';
-                startTimeInput.value = '';
-                endTimeInput.value = '';
-                isEditing = false;
-                editingTaskId = null;
-                $('#taskModal').modal('hide');
-                window.location.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: isEditing ? 'Cập nhật thành công' : 'Thêm thành công',
+                    text: isEditing ? 'Task đã được cập nhật.' : 'Task đã được thêm.'
+                }).then(() => {
+                    titleInput.value = '';
+                    descriptionInput.value = '';
+                    categoryInput.value = '';
+                    startTimeInput.value = '';
+                    endTimeInput.value = '';
+                    isEditing = false;
+                    editingTaskId = null;
+                    $('#taskModal').modal('hide');
+                    window.location.reload();
+                });
             } else {
-                alert(data.message || 'Đã xảy ra lỗi!');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: data.message || 'Đã xảy ra lỗi!'
+                });
             }
         })
         .catch(error => {
-            console.error("Fetch error:", error);
-            alert('Lỗi kết nối đến server!');
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Lỗi kết nối đến server!'
+            });
         });
 }
 
-// GỌI KHI NHẤN NÚT "SỬA"
 function editTask(task_id, title, description, category_id, start_time, end_time) {
-    console.log("Starting editTask with:", { task_id, title, description, category_id, start_time, end_time });
     isEditing = true;
     editingTaskId = task_id;
-    // console.log("isEditing:", isEditing, "editingTaskId:", editingTaskId);
-
-    // Điền thông tin vào các ô input
     titleInput.value = title || '';
     descriptionInput.value = description || '';
     categoryInput.value = category_id || '';
     startTimeInput.value = formatDateToLocal(start_time);
     endTimeInput.value = formatDateToLocal(end_time);
-    console.log("Form values after population:", {
-        title: titleInput.value,
-        description: descriptionInput.value,
-        category: categoryInput.value,
-        startTime: startTimeInput.value,
-        endTime: endTimeInput.value
-    }); 
-
+    startTimeInput.disabled = true;
     document.getElementById('exampleModalLabel').innerText = 'Cập nhật Task';
     $('#taskModal').modal('show');
 }
 
-
 function openAddTaskModal() {
-    // Đặt lại trạng thái
     isEditing = false;
-    editingId = null;
-
-    // Xóa nội dung input
+    editingTaskId = null;
     document.getElementById('taskTitle').value = '';
     document.getElementById('taskDescription').value = '';
     document.getElementById('taskCategory').value = '';
-    document.getElementById('startTime').value = '';
     document.getElementById('endTime').value = '';
-    // Cập nhật tiêu đề modal
     document.getElementById('exampleModalLabel').innerText = 'Add Task';
-    // Mở modal
     $('#taskModal').modal('show');
 }
 
 function deleteTask(task_id) {
-    fetch('?action=deleteTask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `task_id=${task_id}`
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            }
-        });
+    Swal.fire({
+        title: 'Bạn có chắc không?',
+        text: 'Task sẽ được chuyển vào thùng rác!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('?action=deleteTask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `task_id=${task_id}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Xóa thành công',
+                            text: 'Task đã được xóa.'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message || 'Đã xảy ra lỗi!'
+                        });
+                    }
+                });
+        }
+    });
 }
 
 function toggleTask(task_id, completed) {
@@ -301,23 +316,58 @@ function toggleTask(task_id, completed) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cập nhật thành công',
+                    text: `Task đã được đánh dấu là ${status}.`
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: data.message || 'Đã xảy ra lỗi!'
+                });
             }
         });
 }
 
 function clearCompleted() {
-    fetch('?action=clear_completed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: ''
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            }
-        });
+    Swal.fire({
+        title: 'Bạn có chắc không?',
+        text: 'Tất cả task đã hoàn thành sẽ bị xóa!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('?action=clear_completed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: ''
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Xóa thành công',
+                            text: 'Tất cả task đã hoàn thành đã được xóa.'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message || 'Đã xảy ra lỗi!'
+                        });
+                    }
+                });
+        }
+    });
 }
 
 function sortTasks() {
@@ -346,17 +396,27 @@ function importTasks(event) {
             try {
                 const importedTasks = JSON.parse(e.target.result);
                 importedTasks.forEach(task => {
-                    fetch('?action=create', {
+                    fetch('?action=createTask', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: `title=${encodeURIComponent(task.title)}&description=${encodeURIComponent(task.description)}&category_id=${task.category_id || ''}`
                     });
                 });
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Nhập thành công',
+                    text: 'Tasks đã được nhập.'
+                }).then(() => {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                });
             } catch (error) {
-                alert('Error importing tasks. Please ensure the file is a valid JSON.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Error importing tasks. Please ensure the file is a valid JSON.'
+                });
             }
         };
         reader.readAsText(file);
@@ -371,24 +431,21 @@ document.getElementById('taskTitle').addEventListener('keypress', function (e) {
 
 document.getElementById('searchInput').addEventListener('input', searchTasks);
 
-
 function filterTasksByCategory() {
     const categoryId = document.getElementById('categoryFilter').value;
     const search = new URLSearchParams(window.location.search).get('search') || '';
     const filter = new URLSearchParams(window.location.search).get('filter') || 'incomplete';
     const sort = new URLSearchParams(window.location.search).get('sort') || 'false';
-
-    // Cập nhật URL với category_id
     const newUrl = `?filter=${filter}&search=${encodeURIComponent(search)}&sort=${sort}&category_id=${categoryId}`;
     window.location.href = newUrl;
 }
 
-// Hàm xử lí thời gian
 document.querySelectorAll(".countdown").forEach((countdownEl) => {
     const endTimeStr = countdownEl.dataset.endTime;
     const endTime = new Date(endTimeStr).getTime();
 
-    let intervalId; // ✅ Khai báo biến ở đây trước khi dùng trong hàm bên dưới
+    let intervalId;
+    let notifiedOneHourLeft = false;
 
     function updateCountdown() {
         const now = new Date().getTime();
@@ -396,7 +453,7 @@ document.querySelectorAll(".countdown").forEach((countdownEl) => {
 
         if (distance <= 0) {
             countdownEl.innerText = "Đã kết thúc";
-            clearInterval(intervalId); // ✅ Bây giờ không còn lỗi nữa
+            clearInterval(intervalId);
             return;
         }
 
@@ -404,10 +461,149 @@ document.querySelectorAll(".countdown").forEach((countdownEl) => {
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
+        if (hours === 1 && minutes === 0 && seconds === 0 && !notifiedOneHourLeft) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cảnh báo',
+                text: 'Còn 1 giờ nữa! Hãy chuẩn bị hoàn thành nhiệm vụ.'
+            });
+            notifiedOneHourLeft = true;
+        }
+
         countdownEl.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         countdownEl.style.color = "red";
     }
 
     updateCountdown();
-    intervalId = setInterval(updateCountdown, 1000); // ✅ Gán sau khi khai báo
+    intervalId = setInterval(updateCountdown, 1000);
 });
+
+function openHistoryModal() {
+    const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+    modal.show();
+    fetchHistoryActions();
+}
+
+function fetchHistoryActions() {
+    fetch('?action=historyAction')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('historyList').innerHTML = `<p>${data.error}</p>`;
+            } else {
+                displayHistoryActions(data);
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Không thể tải lịch sử thao tác. Vui lòng thử lại sau.'
+            });
+        });
+}
+
+function displayHistoryActions(actions) {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+
+    if (actions.length === 0) {
+        historyList.innerHTML = '<p>Không có lịch sử thao tác nào.</p>';
+    } else {
+        actions.forEach(action => {
+            const actionItem = document.createElement('li');
+            let restoreBtn = "";
+            if (Number(action.is_deleted) === 1) {
+                restoreBtn = `<span class="restore-task-btn" onclick="restoreTask(${action.task_id})" style="cursor:pointer;">🔄</span>`;
+            }
+            actionItem.innerHTML = `${restoreBtn} ${action.timestamp}: ${action.action} ${action.title}`;
+            historyList.appendChild(actionItem);
+        });
+    }
+}
+
+function deleteAllAction() {
+    Swal.fire({
+        title: 'Bạn có chắc không?',
+        text: 'Toàn bộ lịch sử sẽ bị xóa!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('?action=deleteAllAction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Xóa thành công',
+                            text: data.message
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message || 'Lỗi khi xóa lịch sử!'
+                        });
+                    }
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Không thể kết nối máy chủ!'
+                    });
+                });
+        }
+    });
+}
+
+function restoreTask(task_id) {
+    Swal.fire({
+        title: 'Bạn có muốn khôi phục nhiệm vụ này không?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Khôi phục',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('?action=restoreTask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `task_id=${task_id}`
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Khôi phục thành công',
+                            text: data.message
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Không thể kết nối máy chủ!'
+                    });
+                });
+        }
+    });
+}

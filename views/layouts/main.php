@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,8 +15,14 @@
 <body>
     <div class="todo-container">
         <div class="todo-header">
-            <h2 class="text-center mb-0">To-Do List</h2>
-            <small class="d-block text-center opacity-75">Welcome, <?php echo $_SESSION['username']; ?> | <a href="?action=logout" class="text-white">Logout</a></small>
+            <h2 class="mb-0 text-center">To-Do List</h2>
+            <div class="d-flex align-items-cente">
+                <small class="d-block text-center mt-2 fw-light text-decoration-white flex-grow-1">
+                    Welcome, <?php echo $_SESSION['username']; ?> |
+                    <a href="?action=logout" class="text-decoration-none text-danger">Logout</a>
+                </small>
+                <i class="fas fa-history" style="font-size: 40px;" onclick="openHistoryModal()"></i>
+            </div>
         </div>
 
         <div class="p-3">
@@ -64,7 +69,6 @@
             </button>
         </div>
 
-        <!-- Danh sách task nhóm theo danh mục -->
         <!-- Danh sách task nhóm theo danh mục -->
         <div class="accordion" id="taskAccordion">
             <?php foreach ($tasksByCategory as $category_id => $categoryData): ?>
@@ -153,13 +157,29 @@
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
-
-
-
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
+        
+    <!-- Modal hiển thị lịch sử -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="historyModalLabel">Lịch Sử Thao Tác</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="historyList">
+                    <!-- Nội dung lịch sử sẽ được thêm sau -->                        
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="deleteAllAction()">Xoá tất cả lịch sử</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
         <!-- Modal thêm, sửa nhiệm vụ-->
         <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-hidden="true">

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 08, 2025 lúc 09:54 AM
+-- Thời gian đã tạo: Th4 18, 2025 lúc 05:18 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -37,9 +37,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`) VALUES
-(1, 'Learning'),
-(2, 'Personal'),
-(3, 'Shopping');
+(15, 'Ngày mai');
 
 -- --------------------------------------------------------
 
@@ -57,25 +55,16 @@ CREATE TABLE `tasks` (
   `user_id` int(11) DEFAULT NULL,
   `category_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `is_deleted` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `tasks`
 --
 
-INSERT INTO `tasks` (`task_id`, `title`, `description`, `status`, `start_time`, `end_time`, `user_id`, `category_id`, `created_at`, `updated_at`) VALUES
-(14, 'Làm Project Nâng cao', 'Lab 1, Lab 2', 'Completed', '2025-04-07 14:04:30', '2025-04-07 16:04:42', 1, 1, '2025-03-30 02:36:14', '2025-04-08 07:35:38'),
-(18, 'Đi ngủ', 'ngủ sớm trước 10h', 'Pending', NULL, NULL, 1, 2, '2025-04-01 08:36:02', '2025-04-01 08:36:02'),
-(19, 'Mua thức ăn', 'Milk, bread, eggs', 'Pending', NULL, NULL, 1, 3, '2025-04-01 14:14:49', '2025-04-01 14:14:49'),
-(21, 'Dự án tốt nghiệp', 'Quản lí trường học', 'Pending', NULL, NULL, 1, 3, '2025-04-01 15:27:27', '2025-04-04 04:13:37'),
-(22, 'Buy groceries', '123', 'Pending', NULL, NULL, 1, 2, '2025-04-01 15:51:11', '2025-04-01 15:51:11'),
-(23, 'Đi học sớm', 'Đến trường sớm 15p', 'Completed', NULL, NULL, 1, 1, '2025-04-01 16:08:04', '2025-04-08 07:41:55'),
-(25, 'Uống thuốc', 'ho', 'Pending', NULL, NULL, 1, 2, '2025-04-01 16:15:11', '2025-04-01 16:15:11'),
-(29, 'Ngủ 8h', 'tốt cho sức khỏe', 'Pending', NULL, NULL, 1, 2, '2025-04-04 03:14:21', '2025-04-04 03:14:21'),
-(32, 'Nấu ăn', 'Canh chua cá lóc', 'Pending', NULL, NULL, 1, 2, '2025-04-07 08:47:40', '2025-04-07 08:47:40'),
-(34, 'Debug', 'on tap debug', 'Pending', '2025-04-07 23:17:00', '2025-04-08 23:15:00', 1, 1, '2025-04-07 16:15:48', '2025-04-07 16:15:48'),
-(35, '08/04/2025', 'hoom nayt', 'Pending', '2025-04-08 14:50:00', '2025-04-08 14:55:00', 1, 1, '2025-04-08 07:41:09', '2025-04-08 07:41:09');
+INSERT INTO `tasks` (`task_id`, `title`, `description`, `status`, `start_time`, `end_time`, `user_id`, `category_id`, `created_at`, `updated_at`, `is_deleted`) VALUES
+(57, 'Đi ngủ', 'Ngủ ở nhà', 'Pending', '2025-04-18 22:13:00', '2025-04-19 12:00:00', 4, 15, '2025-04-18 15:14:46', '2025-04-18 15:14:46', 0);
 
 -- --------------------------------------------------------
 
@@ -97,7 +86,71 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`user_id`, `username`, `email`, `password`, `created_at`) VALUES
 (1, 'admin', 'admin@example.com', '1', '2025-03-21 14:48:05'),
-(2, 'user1', 'user1@example.com', '2', '2025-03-21 14:48:05');
+(4, '1', 'lehieuphuoc35205@gmail.com', '$2y$10$PKmyfXZEcJjjtPFQQuvvnOu6TCgwGT4pdoHNUYcxP4iLBJs25lvoy', '2025-04-18 13:24:33'),
+(5, '2', 'anhanh2345@g.com', '$2y$10$8z/yJyf3D9bC/WV2dzLaveaeo2HzmtfVG4w0rtIHxt6wy6SSNhQ0O', '2025-04-18 13:36:06');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `user_actions`
+--
+
+CREATE TABLE `user_actions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `task_id` int(11) DEFAULT NULL,
+  `timestamp` datetime DEFAULT current_timestamp(),
+  `title` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `user_actions`
+--
+
+INSERT INTO `user_actions` (`id`, `user_id`, `action`, `task_id`, `timestamp`, `title`) VALUES
+(77, 1, 'Đã xóa nhiệm vụ', 48, '2025-04-13 14:53:27', 'Test'),
+(78, 1, 'Đã xóa nhiệm vụ', 47, '2025-04-13 15:09:09', 'Debug Knight2'),
+(79, 1, 'Đã sửa nhiệm vụ', 45, '2025-04-13 15:10:40', 'Proteins'),
+(80, 1, 'Đã khôi phục nhiệm vụ', 47, '2025-04-13 15:10:50', 'Debug Knight2'),
+(81, 1, 'Đã khôi phục nhiệm vụ', 48, '2025-04-13 15:11:03', 'Test'),
+(82, 1, 'Đã xóa nhiệm vụ', 47, '2025-04-13 15:11:09', 'Debug Knight2'),
+(83, 1, 'Đã xóa nhiệm vụ', 48, '2025-04-13 15:11:26', 'Test'),
+(84, 1, 'Đã sửa nhiệm vụ', 49, '2025-04-13 15:12:00', 'LOL'),
+(85, 1, 'Đã xóa nhiệm vụ', 43, '2025-04-13 15:12:06', 'Buy groceri'),
+(86, 1, 'Đã khôi phục nhiệm vụ', 48, '2025-04-13 15:12:21', 'Test'),
+(87, 1, 'Đã xóa nhiệm vụ', 48, '2025-04-13 15:12:28', 'Test'),
+(88, 1, 'Đã khôi phục nhiệm vụ', 47, '2025-04-13 15:20:42', 'Debug Knight2'),
+(89, 1, 'Đã xóa nhiệm vụ', 47, '2025-04-13 15:20:45', 'Debug Knight2'),
+(90, 1, 'Đã khôi phục nhiệm vụ', 43, '2025-04-13 15:20:49', 'Buy groceri'),
+(91, 1, 'Đã khôi phục nhiệm vụ', 47, '2025-04-13 15:20:54', 'Debug Knight2'),
+(92, 1, 'Đã khôi phục nhiệm vụ', 48, '2025-04-13 15:20:58', 'Test'),
+(93, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:24:50', 'Debug Knight2'),
+(94, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:25:08', 'Debug Knight2'),
+(95, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:26:54', 'Debug Knight2'),
+(96, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:27:00', 'Debug Knight2'),
+(97, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:27:11', 'Debug Knight2'),
+(98, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:28:43', 'Debug Knight2'),
+(99, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:28:52', 'Debug Knight2'),
+(100, 1, 'Đã sửa nhiệm vụ', 47, '2025-04-13 15:30:11', 'Debug Knight2'),
+(101, 4, 'Đã thêm nhiệm vụ', 50, '2025-04-18 21:10:07', 'Ngày hôm nay'),
+(102, 4, 'Đã xóa nhiệm vụ', 50, '2025-04-18 21:10:55', 'Ngày hôm nay'),
+(103, 4, 'Đã thêm nhiệm vụ', 51, '2025-04-18 21:16:48', 'ds'),
+(104, 4, 'Đã thêm nhiệm vụ', 52, '2025-04-18 21:26:14', 'ds'),
+(105, 4, 'Đã thêm nhiệm vụ', 53, '2025-04-18 21:26:36', 'duc copffff'),
+(106, 4, 'Đã sửa nhiệm vụ', 53, '2025-04-18 21:26:57', 'duc'),
+(107, 4, 'Đã sửa nhiệm vụ', 53, '2025-04-18 21:27:12', 'duc'),
+(108, 4, 'Đã xóa nhiệm vụ', 53, '2025-04-18 21:27:20', 'duc'),
+(109, 4, 'Đã xóa nhiệm vụ', 52, '2025-04-18 21:35:12', 'ds'),
+(110, 4, 'Đã thêm nhiệm vụ', 54, '2025-04-18 21:43:15', 'dsâ'),
+(111, 4, 'Đã sửa nhiệm vụ', 54, '2025-04-18 21:43:53', 'qqqqqqqqqqqqqqqqqq'),
+(112, 4, 'Đã thêm nhiệm vụ', 55, '2025-04-18 21:44:55', 'ds'),
+(113, 4, 'Đã sửa nhiệm vụ', 55, '2025-04-18 21:45:11', 'dsss'),
+(114, 4, 'Đã thêm nhiệm vụ', 56, '2025-04-18 22:10:06', 'duc copffff'),
+(115, 4, 'Đã sửa nhiệm vụ', 56, '2025-04-18 22:10:38', '88999jjjj'),
+(116, 4, 'Đã xóa nhiệm vụ', 56, '2025-04-18 22:10:43', '88999jjjj'),
+(117, 4, 'Đã sửa nhiệm vụ', 55, '2025-04-18 22:13:30', 'mmm'),
+(118, 4, 'Đã thêm nhiệm vụ', 57, '2025-04-18 22:14:46', 'Đi ngủ');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -126,6 +179,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Chỉ mục cho bảng `user_actions`
+--
+ALTER TABLE `user_actions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- AUTO_INCREMENT cho các bảng đã đổ
 --
 
@@ -133,19 +193,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT cho bảng `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT cho bảng `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT cho bảng `user_actions`
+--
+ALTER TABLE `user_actions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=119;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
@@ -157,6 +223,12 @@ ALTER TABLE `users`
 ALTER TABLE `tasks`
   ADD CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   ADD CONSTRAINT `tasks_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`);
+
+--
+-- Các ràng buộc cho bảng `user_actions`
+--
+ALTER TABLE `user_actions`
+  ADD CONSTRAINT `user_actions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -1,0 +1,14 @@
+RewriteEngine On
+RewriteBase /todolist/
+
+# Nếu là file hoặc folder thật thì không rewrite
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# File tĩnh -> public/
+RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot|map)$ [NC]
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Còn lại -> public/index.php
+RewriteRule ^(.*)$ public/index.php [QSA,L]

@@ -119,5 +119,23 @@ body {
     text-align: center; /* Căn giữa */
 }
 
+.todo-header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    border-radius: 8px 8px 0 0;
+}
+.todo-header h2 {
+    font-size: 24px;
+}
+.todo-header small {
+    font-size: 14px;
+}
+.todo-header a {
+    color: #ff4d4d !important;
+}
+.fa-history {
+    cursor: pointer;
+}
 
 

@@ -64,7 +64,8 @@
         </form>
 
         <div class="text-center mt-3">
-            <small>Don't have an account? <a href="?action=register" class="text-primary">Sign up</a></small>
+            <small>Don't have an account? <a href="?action=register" class="text-primary">Sign up</a></small><br>
+            <small>Forgot your password? <a href="?action=forgotPassword" class="text-primary">Reset Password</a></small>
         </div>
     </div>
 </body>

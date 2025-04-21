@@ -1,4 +1,7 @@
 <?php
+
+use LDAP\Result;
+
 require_once __DIR__ . '/../models/Task.php';
 require_once __DIR__ . '/../models/Category.php';
 
@@ -44,7 +47,8 @@ class TaskController
         require_once __DIR__ . '/../views/layouts/main.php';
     }
 
-    public function createCategory() { 
+    public function createCategory()
+    {
         $name = $_POST['name'];
         // Kiểm tra dữ liệu đầu vào
         if (empty($name)) {
@@ -55,14 +59,17 @@ class TaskController
         if ($this->categoryModel->categoryExists($name)) {
             echo json_encode(['success' => false, 'message' => 'Tên danh mục đã tồn tại.']);
             exit;
-        }       
+        }
         // Thêm danh mục mới
         $result = $this->categoryModel->createCategory($name);
-                echo json_encode(['success' => true,
-                 'message' => 'Thêm danh mục thành công.']);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Thêm danh mục thành công.'
+        ]);
     }
 
-    public function updateCategory() {
+    public function updateCategory()
+    {
         // Lấy dữ liệu từ POST
         $id = $_POST['id'] ?? null;
         $name = $_POST['name'] ?? '';
@@ -103,7 +110,7 @@ class TaskController
         }
     }
 
-    public function create()
+    public function createTask()
     {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -115,17 +122,21 @@ class TaskController
             $end_time = $_POST['end_time'];
 
             if (!empty($title) && !empty($description) && !empty($category_id) && !empty($start_time) && !empty($end_time)) {
-                $this->taskModel->create($title, $description, $user_id, $category_id, $start_time, $end_time);
+
+                $task_id = $this->taskModel->create($title, $description, $user_id, $category_id, $start_time, $end_time);
+                $task = $this->taskModel->getTaskById($task_id);
+                $action = $this->taskModel->logUserAction($user_id, "Đã thêm nhiệm vụ", $task_id, $title);
                 echo json_encode(['success' => true]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Please fill in all information!']);
+                echo json_encode(['success' => false, 'message' => 'Vui lòng điền đầy đủ thông tin']);
             }
         }
     }
 
-    public function update()
+    public function updateTask()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user_id = $_SESSION['user_id'];
             $task_id = $_POST['task_id'];
             $title = $_POST['title'];
             $description = $_POST['description'];
@@ -134,13 +145,22 @@ class TaskController
             $end_time = $_POST['end_time'];
 
             if ($title !== '' && $description !== '' && $category_id !== '' && $start_time !== '' && $end_time !== '') {
-                $this->taskModel->update($task_id, $title, $description, $category_id, $start_time, $end_time);
-                echo json_encode(['success' => true]);
+                $result = $this->taskModel->update($task_id, $title, $description, $category_id, $start_time, $end_time);
+                $task = $this->taskModel->getTaskById($task_id);
+                // Nếu có bản ghi bị ảnh hưởng
+                if ($result > 0) {
+
+                    $this->taskModel->logUserAction($user_id, "Đã sửa nhiệm vụ", $task_id, $title);
+                    echo json_encode(['success' => true, 'message' => 'Sửa nhiệm vụ thành công!']);
+                } else {
+                    echo json_encode(['success' => true, 'message' => 'Không có nhiệm vụ nào được sửa']);
+                }
             } else {
-                echo json_encode(['success' => false, 'message' => 'Please fill in all information!']);
+                echo json_encode(['success' => false, 'message' => 'Vui lòng điền đầy đủ thông tin!']);
             }
         }
     }
+
 
     public function toggle()
     {
@@ -153,15 +173,61 @@ class TaskController
         }
     }
 
-    public function delete()
+    public function deleteTask()
     {
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user_id = $_SESSION['user_id'];
             $task_id = $_POST['task_id'];
-            $this->taskModel->delete($task_id);
-            echo json_encode(['success' => true]);
+
+            if (!empty($task_id)) {
+                // Lấy tiêu đề nhiệm vụ trước khi xóa
+                $task = $this->taskModel->getTaskById($task_id);
+                $title = $task['title'] ?? 'Không rõ';
+
+                $result = $this->taskModel->delete($task_id);
+
+                if ($result > 0) {
+                    $this->taskModel->logUserAction($user_id, "Đã xóa nhiệm vụ", $task_id, $title);
+                    echo json_encode(['success' => true, 'message' => 'Xóa nhiệm vụ thành công!']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Không tìm thấy nhiệm vụ cần xóa.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Thiếu ID nhiệm vụ cần xóa.']);
+            }
         }
     }
+    public function restoreTask()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $task_id = $_POST['task_id'];
+            $user_id = $_SESSION['user_id'];
+            $task = $this->taskModel->getTaskById($task_id);
+            $result = $this->taskModel->restoreTask($task_id);
+            if ($result>0) {
+                $this->taskModel->logUserAction($user_id, "Đã khôi phục nhiệm vụ", $task_id, $task['title']);
+                echo json_encode(['success' => true,  'message' => 'Khôi phục nhiệm vụ thành công!']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể khôi phục nhiệm vụ!']);
+            }
+        }
+    }
+
+
+    public function deleteAllAction()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user_id = $_SESSION['user_id'];
+
+            $result = $this->taskModel->deleteAllActionsByUser($user_id);
+            if ($result > 0) {
+                echo json_encode(['success' => true, 'message' => 'Đã xóa toàn bộ lịch sử']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không có lịch sử để xóa']);
+            }
+        }
+    }
+
 
     public function clearCompleted()
     {
@@ -194,7 +260,28 @@ class TaskController
             $status = $task['status'] === 'Completed' ? '(Completed)' : '';
             $pdf->Cell(0, 10, ($index + 1) . ". {$task['title']} $status", 0, 1);
         }
-        
+
         $pdf->Output('todolist.pdf', 'D');
+    }
+
+    public function historyAction()
+    {
+
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['error' => 'User not logged in']);
+            return;
+        }
+        // Lấy ID người dùng từ session
+        $user_id = $_SESSION['user_id'];
+
+        // Gọi phương thức trong model để lấy lịch sử thao tác
+        $history = $this->taskModel->getHistoryAction($user_id);
+
+        if (empty($history)) {
+            echo json_encode(['error' => 'Không có bản ghi nào']);
+        } else {
+
+            echo json_encode($history);
+        }
     }
 }
